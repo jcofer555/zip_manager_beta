@@ -4,8 +4,8 @@ $output   = $_GET['output'] ?? '';
 $password = $_GET['password'] ?? '';
 $format   = $_GET['format'] ?? '7z';
 $name     = $_GET['name']   ?? 'archive';
-$logFile  = '/boot/config/plugins/zip_manager/logs/archiver_debug.log';
-$logFile2 = '/boot/config/plugins/zip_manager/logs/archiver_history.log';
+$logFile  = '/boot/config/plugins/zip_manager_beta/logs/archiver_debug.log';
+$logFile2 = '/boot/config/plugins/zip_manager_beta/logs/archiver_history.log';
 
 function overwriteLog(string $logFile, string $newLogContent): void {
   $newLogContent = rtrim($newLogContent) . "\n\n";

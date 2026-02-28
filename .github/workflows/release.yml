@@ -1,4 +1,4 @@
-name: Zip Manager
+name: Zip Manager Beta
 
 on:
   release:

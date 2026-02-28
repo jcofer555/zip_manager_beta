@@ -6,7 +6,7 @@ Tag="unzip.png"
 Markdown="false"
 ---
 <?php
-$logDir = '/boot/config/plugins/zip_manager/logs';
+$logDir = '/boot/config/plugins/zip_manager_beta/logs';
 
 if (!is_dir($logDir)) {
   mkdir($logDir, 0755, true);
@@ -283,9 +283,9 @@ $archiverUrl = "/Settings/Archiver" . ($csrfToken ? "?csrf_token=" . urlencode($
   <div style="margin-left: auto; width: 240px;">
     <?php
     if (isset($_POST['generate_diagnostics'])) {
-      $diagFolder = '/boot/config/plugins/zip_manager/zip_manager_diagnostics';
-      $diagZip = '/boot/config/plugins/zip_manager/zip_manager_diagnostics.zip';
-      $debugLog = '/boot/config/plugins/zip_manager/logs/zip_manager_diagnostic_debug.log';
+      $diagFolder = '/boot/config/plugins/zip_manager_beta/zip_manager_beta_diagnostics';
+      $diagZip = '/boot/config/plugins/zip_manager_beta/zip_manager_beta_diagnostics.zip';
+      $debugLog = '/boot/config/plugins/zip_manager_beta/logs/zip_manager_beta_diagnostic_debug.log';
 
       // Cleanup previous
       @exec("rm -rf " . escapeshellarg($diagFolder));
@@ -301,7 +301,7 @@ $archiverUrl = "/Settings/Archiver" . ($csrfToken ? "?csrf_token=" . urlencode($
       ];
 
       foreach ($logFiles as $filename) {
-        $src = "/boot/config/plugins/zip_manager/logs/$filename";
+        $src = "/boot/config/plugins/zip_manager_beta/logs/$filename";
         $dest = "$diagFolder/$filename";
 
         if (!file_exists($src))
@@ -418,7 +418,7 @@ if ($filename === 'extractor_debug.log') {
 
       // Redacted system info (remove hostname)
       $hostname = php_uname('n');
-      $plgFile = '/boot/config/plugins/zip_manager.plg';
+      $plgFile = '/boot/config/plugins/zip_manager_beta.plg';
 
       if (file_exists($plgFile)) {
         $raw = file_get_contents($plgFile);
@@ -450,7 +450,7 @@ if ($filename === 'extractor_debug.log') {
       exec("rm -rf " . escapeshellarg($diagFolder));
 
       if (file_exists($diagZip)) {
-        echo "<p style='color:green;'>✅ Diagnostics created: <a href='/boot/config/plugins/zip_manager/" . basename($diagZip) . "' download>Download ZIP</a></p>";
+        echo "<p style='color:green;'>✅ Diagnostics created: <a href='/boot/config/plugins/zip_manager_beta/" . basename($diagZip) . "' download>Download ZIP</a></p>";
       } else {
         echo "<p style='color:red;'>❌ Failed to create diagnostics zip (code $exitCode)</p>";
       }
@@ -595,7 +595,7 @@ function toggleHistory() {
   arrow.textContent = visible ? "▶" : "▼";
 }
 function refreshExtractLog() {
-  fetch("/boot/config/plugins/zip_manager/logs/extractor_history.log")
+  fetch("/boot/config/plugins/zip_manager_beta/logs/extractor_history.log")
     .then(res => {
       if (!res.ok) throw new Error("Log not found");
       return res.text();
@@ -634,7 +634,7 @@ function clearExtractHistory() {
 
 confirmBtn.onclick = () => {
   modal.style.display = "none";
-  fetch("/plugins/zip_manager/helpers/clear_extract_history.php", { method: "GET" })
+  fetch("/plugins/zip_manager_beta/helpers/clear_extract_history.php", { method: "GET" })
     .then(res => res.text())
     .then(() => {
       const logBox = document.getElementById("extractLogBox");
@@ -675,7 +675,7 @@ if (!input) {
 
   outputBox.innerHTML = "<div style='color: orange;'>🔄 Listing archive contents...</div>";
 
-  fetch(`/plugins/zip_manager/helpers/list_archive_contents.php?input=${encodeURIComponent(input)}&password=${encodeURIComponent(password)}`)
+  fetch(`/plugins/zip_manager_beta/helpers/list_archive_contents.php?input=${encodeURIComponent(input)}&password=${encodeURIComponent(password)}`)
     .then(res => {
       if (!res.ok) throw new Error("Archive listing failed");
       return res.text();
@@ -763,7 +763,7 @@ function openPicker(targetId, isDir, path = "/mnt/") {
 
   updateBreadcrumb(path);
 
-  fetch(`/plugins/zip_manager/helpers/list_files.php?dir=${encodeURIComponent(path)}`)
+  fetch(`/plugins/zip_manager_beta/helpers/list_files.php?dir=${encodeURIComponent(path)}`)
     .then(res => res.json())
     .then(items => {
       if (items.error) {
@@ -836,7 +836,7 @@ function openPicker(targetId, isDir, path = "/mnt/") {
             validateExtractButton(); // ✅ Update button state
           };
 
-          fetch(`/plugins/zip_manager/helpers/check_encryption.php?input=${encodeURIComponent(checked.value)}`)
+          fetch(`/plugins/zip_manager_beta/helpers/check_encryption.php?input=${encodeURIComponent(checked.value)}`)
             .then(res => res.json())
             .then(data => {
               document.getElementById("archivePassword").value = "";
@@ -1081,8 +1081,8 @@ function runExtraction() {
   statusBox.innerText = "⏳ Checking for overwrite conflicts...";
   extractButton.disabled = true;
 
-  const checkEndpoint = `/plugins/zip_manager/helpers/check_extract_overwrites.php?input=${encodeURIComponent(input)}&output=${encodeURIComponent(output)}&password=${encodeURIComponent(password)}`;
-  const extractEndpoint = `/plugins/zip_manager/helpers/extract.php?input=${encodeURIComponent(input)}&output=${encodeURIComponent(output)}&password=${encodeURIComponent(password)}`;
+  const checkEndpoint = `/plugins/zip_manager_beta/helpers/check_extract_overwrites.php?input=${encodeURIComponent(input)}&output=${encodeURIComponent(output)}&password=${encodeURIComponent(password)}`;
+  const extractEndpoint = `/plugins/zip_manager_beta/helpers/extract.php?input=${encodeURIComponent(input)}&output=${encodeURIComponent(output)}&password=${encodeURIComponent(password)}`;
 
   fetch(checkEndpoint)
     .then(res => res.json())
@@ -1183,7 +1183,7 @@ const observer = new MutationObserver(() => {
 observer.observe(statusBox, { childList: true, characterData: true, subtree: true });
 
 function loadExtractHistory() {
-  fetch("/plugins/zip_manager/helpers/get_extract_history.php")
+  fetch("/plugins/zip_manager_beta/helpers/get_extract_history.php")
     .then(res => res.text())
     .then(data => {
       const logBox = document.getElementById("extractLogBox");
@@ -1231,7 +1231,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const toggleWrapper = document.getElementById("togglePasswordWrapper");
 
 if ( typeof caPluginUpdateCheck === "function" ) {
-        caPluginUpdateCheck("zip_manager.plg",{name:"Zip Manager"});
+        caPluginUpdateCheck("zip_manager_beta.plg",{name:"Zip Manager"});
     }
 
   if (passwordInput && toggleWrapper) {

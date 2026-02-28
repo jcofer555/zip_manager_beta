@@ -1,5 +1,5 @@
 <?php
-$historyPath = '/boot/config/plugins/zip_manager/logs/extractor_history.log';
+$historyPath = '/boot/config/plugins/zip_manager_beta/logs/extractor_history.log';
 
 if (!file_exists($historyPath) || !trim(file_get_contents($historyPath))) {
   echo "No extraction history!";

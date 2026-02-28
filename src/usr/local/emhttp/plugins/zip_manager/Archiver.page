@@ -6,7 +6,7 @@ Tag="zip.png"
 Markdown="false"
 ---
 <?php
-$logDir = '/boot/config/plugins/zip_manager/logs';
+$logDir = '/boot/config/plugins/zip_manager_beta/logs';
 
 if (!is_dir($logDir)) {
   mkdir($logDir, 0755, true);
@@ -278,9 +278,9 @@ $extractorUrl = "/Settings/Extractor" . ($csrfToken ? "?csrf_token=" . urlencode
   <div style="margin-left: auto; width: 240px;">
     <?php
     if (isset($_POST['generate_diagnostics'])) {
-      $diagFolder = '/boot/config/plugins/zip_manager/zip_manager_diagnostics';
-      $diagZip = '/boot/config/plugins/zip_manager/zip_manager_diagnostics.zip';
-      $debugLog = '/boot/config/plugins/zip_manager/logs/zip_manager_diagnostic_debug.log';
+      $diagFolder = '/boot/config/plugins/zip_manager_beta/zip_manager_beta_diagnostics';
+      $diagZip = '/boot/config/plugins/zip_manager_beta/zip_manager_beta_diagnostics.zip';
+      $debugLog = '/boot/config/plugins/zip_manager_beta/logs/zip_manager_beta_diagnostic_debug.log';
 
       // Cleanup previous
       @exec("rm -rf " . escapeshellarg($diagFolder));
@@ -296,7 +296,7 @@ $extractorUrl = "/Settings/Extractor" . ($csrfToken ? "?csrf_token=" . urlencode
       ];
 
       foreach ($logFiles as $filename) {
-        $src = "/boot/config/plugins/zip_manager/logs/$filename";
+        $src = "/boot/config/plugins/zip_manager_beta/logs/$filename";
         $dest = "$diagFolder/$filename";
 
         if (!file_exists($src))
@@ -413,7 +413,7 @@ if ($filename === 'extractor_debug.log') {
 
       // Redacted system info (remove hostname)
       $hostname = php_uname('n');
-      $plgFile = '/boot/config/plugins/zip_manager.plg';
+      $plgFile = '/boot/config/plugins/zip_manager_beta.plg';
 
       if (file_exists($plgFile)) {
         $raw = file_get_contents($plgFile);
@@ -445,7 +445,7 @@ if ($filename === 'extractor_debug.log') {
       exec("rm -rf " . escapeshellarg($diagFolder));
 
       if (file_exists($diagZip)) {
-        echo "<p style='color:green;'>✅ Diagnostics created: <a href='/boot/config/plugins/zip_manager/" . basename($diagZip) . "' download>Download ZIP</a></p>";
+        echo "<p style='color:green;'>✅ Diagnostics created: <a href='/boot/config/plugins/zip_manager_beta/" . basename($diagZip) . "' download>Download ZIP</a></p>";
       } else {
         echo "<p style='color:red;'>❌ Failed to create diagnostics zip (code $exitCode)</p>";
       }
@@ -604,7 +604,7 @@ function toggleHistory() {
   arrow.textContent = visible ? "▶" : "▼";
 }
 function refresharchiveLog() {
-  fetch("/boot/config/plugins/zip_manager/logs/archiver_history.log")
+  fetch("/boot/config/plugins/zip_manager_beta/logs/archiver_history.log")
     .then(res => {
       if (!res.ok) throw new Error("Log not found");
       return res.text();
@@ -645,7 +645,7 @@ function cleararchiveHistory() {
 
   confirmBtn.onclick = () => {
     modal.style.display = "none";
-    fetch("/plugins/zip_manager/helpers/clear_archive_history.php", { method: "GET" })
+    fetch("/plugins/zip_manager_beta/helpers/clear_archive_history.php", { method: "GET" })
       .then(res => res.text())
       .then(() => {
         logBox.innerText = "";
@@ -728,7 +728,7 @@ function openPicker(targetId, isDir, path = "/mnt/") {
 
   updateBreadcrumb(path);
 
-  fetch(`/plugins/zip_manager/helpers/list_files.php?dir=${encodeURIComponent(path)}`)
+  fetch(`/plugins/zip_manager_beta/helpers/list_files.php?dir=${encodeURIComponent(path)}`)
     .then(res => res.json())
     .then(items => {
       if (items.error) {
@@ -841,7 +841,7 @@ function openPicker(targetId, isDir, path = "/mnt/") {
           const path = cb.dataset.fullPath;
           const isFolder = cb.dataset.isFolder === "true";
 
-          fetch(`/plugins/zip_manager/helpers/get_file_size.php?path=${encodeURIComponent(path)}`)
+          fetch(`/plugins/zip_manager_beta/helpers/get_file_size.php?path=${encodeURIComponent(path)}`)
             .then(res => res.json())
             .then(data => {
               const size = data.bytes || 0;
@@ -1024,8 +1024,8 @@ function runArchiving() {
   archiveButton.disabled = true;
   statusBox.innerText = "⏳ Checking for overwrite conflicts...";
 
-  const checkEndpoint = `/plugins/zip_manager/helpers/check_archive_overwrites.php?input=${encodeURIComponent(input)}&output=${encodeURIComponent(output)}&format=${encodeURIComponent(format)}&name=${encodeURIComponent(name)}`;
-  const archiveEndpoint = `/plugins/zip_manager/helpers/archive.php?input=${encodeURIComponent(input)}&output=${encodeURIComponent(output)}&password=${encodeURIComponent(password)}&format=${encodeURIComponent(format)}&name=${encodeURIComponent(name)}`;
+  const checkEndpoint = `/plugins/zip_manager_beta/helpers/check_archive_overwrites.php?input=${encodeURIComponent(input)}&output=${encodeURIComponent(output)}&format=${encodeURIComponent(format)}&name=${encodeURIComponent(name)}`;
+  const archiveEndpoint = `/plugins/zip_manager_beta/helpers/archive.php?input=${encodeURIComponent(input)}&output=${encodeURIComponent(output)}&password=${encodeURIComponent(password)}&format=${encodeURIComponent(format)}&name=${encodeURIComponent(name)}`;
 
   fetch(checkEndpoint)
     .then(res => res.json())
@@ -1130,7 +1130,7 @@ const observer = new MutationObserver(() => {
 observer.observe(statusBox, { childList: true, characterData: true, subtree: true });
 
 function loadarchiveHistory() {
-  fetch("/plugins/zip_manager/helpers/get_archive_history.php")
+  fetch("/plugins/zip_manager_beta/helpers/get_archive_history.php")
     .then(res => res.text())
     .then(data => {
       const logBox = document.getElementById("archiveLogBox");
@@ -1201,7 +1201,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const toggleWrapper = document.getElementById("togglePasswordWrapper");
 
 if ( typeof caPluginUpdateCheck === "function" ) {
-        caPluginUpdateCheck("zip_manager.plg",{name:"Zip Manager"});
+        caPluginUpdateCheck("zip_manager_beta.plg",{name:"Zip Manager"});
     }
 
   if (passwordInput && toggleWrapper) {

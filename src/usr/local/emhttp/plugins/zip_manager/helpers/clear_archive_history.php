@@ -1,5 +1,5 @@
 <?php
-$logFile = '/boot/config/plugins/zip_manager/logs/archiver_history.log';
+$logFile = '/boot/config/plugins/zip_manager_beta/logs/archiver_history.log';
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
   if (file_exists($logFile)) {

@@ -3,8 +3,8 @@ $input     = $_GET['input'] ?? '';
 $output    = $_GET['output'] ?? '';
 $password  = $_GET['password'] ?? '';
 $passArg   = $password ? "-p" . escapeshellarg($password) : "";
-$logFile   = '/boot/config/plugins/zip_manager/logs/extractor_debug.log';
-$logFile2  = '/boot/config/plugins/zip_manager/logs/extractor_history.log';
+$logFile   = '/boot/config/plugins/zip_manager_beta/logs/extractor_debug.log';
+$logFile2  = '/boot/config/plugins/zip_manager_beta/logs/extractor_history.log';
 
 function overwriteLog(string $logFile, string $newLogContent): void {
     file_put_contents($logFile, rtrim($newLogContent) . "\n\n");
