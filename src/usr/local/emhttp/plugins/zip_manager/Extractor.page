@@ -1,0 +1,1243 @@
+Menu="Utilities"
+Type="xmenu"
+Title="Extractor"
+Icon="unzip.png"
+Tag="unzip.png"
+Markdown="false"
+---
+<?php
+$logDir = '/boot/config/plugins/zip_manager/logs';
+
+if (!is_dir($logDir)) {
+  mkdir($logDir, 0755, true);
+}
+?>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+.field-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.field-row label {
+  width: 160px;
+  font-weight: bold;
+  color: white;
+}
+
+.field-row input {
+  max-width: 300px;
+  flex: 1;
+  padding: 6px;
+  border-radius: 4px;
+  background-color: #111111;
+  color: orange;
+  cursor: pointer;
+}
+
+#pickerModal {
+  display: none;
+  position: relative;
+  background: #111111;
+  border: 1px solid orange;
+  padding: 12px;
+  color: orange;
+  font-family: monospace;
+  font-size: 16px;
+  width: 448px;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+#breadcrumb {
+  margin-bottom: 10px;
+  color: orange;
+  font-family: monospace;
+  user-select: none;
+}
+
+#breadcrumb span {
+  cursor: pointer;
+  text-decoration: underline;
+  margin-right: 5px;
+}
+
+#breadcrumb span.separator {
+  cursor: default;
+  text-decoration: none;
+  margin-right: 5px;
+  color: gray;
+}
+
+#fileList {
+  padding-left: 18px;
+  list-style: none;
+  margin: 0;
+  color: orange;
+}
+
+#fileList li {
+  display: block;
+  margin: 4px 0;
+  font-family: monospace;
+  font-size: 16px;
+}
+
+#fileList span {
+  color: orange;
+  padding: 4px 8px;
+  cursor: pointer;
+  font-family: monospace;
+  font-size: 16px;
+}
+
+#fileList span:hover {
+  text-decoration: underline;
+}
+
+#breadcrumb {
+  color: green;
+  user-select: none;
+  margin-bottom: 8px;
+  font-family: monospace; /* optional */
+  white-space: nowrap; /* keep breadcrumb on one line */
+}
+
+#breadcrumb span {
+  cursor: pointer;
+  padding: 0;
+  margin: 0;
+  transition: color 0.2s ease;
+  display: inline-block;
+}
+
+#breadcrumb span:hover:not(.separator) {
+  color: red;
+}
+
+#breadcrumb .separator {
+  cursor: default;
+  padding: 0 1px;
+  margin: 0;
+  color: orange;
+  user-select: none;
+  pointer-events: none;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-8px); }
+  40%, 80% { transform: translateX(8px); }
+}
+
+.shake {
+  animation: shake 0.5s;
+}
+
+#passwordRow {
+  display: none;
+}
+
+@keyframes statusPulse {
+  0%   { background-color: #2a2a2a; }
+  20%  { background-color: #3a3a3a; }
+  40%  { background-color: #444; }
+  60%  { background-color: #3a3a3a; }
+  80%  { background-color: #2f2f2f; }
+  100% { background-color: #2a2a2a; }
+}
+
+#statusBox {
+  display: inline-block;         /* limit width to content */
+  padding: 0px 0px;
+  border-radius: 6px;
+  color: orange;
+  margin-top: 0px;
+  font-weight: bold;
+  max-width: 90%;                /* prevent overflow */
+  word-wrap: break-word;
+}
+
+#statusBox.animate-pulse {
+  animation: statusPulse 1s ease;
+}
+
+#statusBox:empty {
+  display: none;
+}
+
+body {
+  background-color: #111111;
+}
+
+#listOutput {
+  display: none;
+  margin-top: 12px;
+  background: #111111;
+  border: 1px solid orange;
+  font-size: 16px;
+  padding: 12px;
+  color: orange;
+  max-width: 448px;
+  font-family: monospace;
+  overflow-y: auto;
+  max-height: 200px;
+}
+
+.highlight-input {
+  background-color: #111111;
+  color: orange;
+  border: 1px solid orange;
+  padding: 6px;
+  border-radius: 4px;
+  font-family: monospace;
+  transition: background-color 0.2s ease;
+}
+
+.highlight-input:focus {
+  background-color: #111111;
+  outline: none; /* removes browser default blue border */
+  box-shadow: 0 0 6px 2px rgba(255, 165, 0, 0.4); /* orange glow */
+  transition: box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.input-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+#fileCountDisplay {
+  position: absolute;
+  top: 37%;
+  left: 26%; /* anchor to the right of the input field */
+  transform: translateY(-50%);
+  width: 275px; /* fixed width to prevent shifting */
+  font-family: monospace;
+  color: orange;
+  font-size: 16px;
+  font-weight: bold;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.btn-orange {
+  background-color: #111111;
+  color: orange;
+  border: 1px solid orange;
+  padding: 6px 10px;
+  font-family: monospace;
+  cursor: pointer;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btn-orange:focus {
+  background-color: #111111;
+  box-shadow: 0 0 6px 2px rgba(255, 165, 0, 0.4);
+  color: white; /* ensures glow + white text on focus */
+}
+
+#extractLogPlaceholder {
+  display: none;
+  font-family: monospace;
+  font-size: 16px;
+  padding: 8px;
+  background-color: #111111;
+  max-width: 1090px;
+  margin-top: 8px;
+}
+</style>
+
+<?php
+// Dynamically generate the Archiver page URL with CSRF token
+$csrfToken = $_GET['csrf_token'] ?? ''; // Or retrieve from session if needed
+$archiverUrl = "/Settings/Archiver" . ($csrfToken ? "?csrf_token=" . urlencode($csrfToken) : '');
+?>
+
+<div style="display: flex; justify-content: end; align-items: flex-start; margin-bottom: 0.1em;">
+
+  <!-- Button container -->
+  <div style="display: flex; flex-direction: row; gap: 0.5em; align-items: flex-start; margin-left: 1em;">
+    <!-- Archiver Page -->
+    <form action="<?= htmlspecialchars($archiverUrl) ?>" method="get" style="margin: 0;">
+      <input type="submit" value="📤 Archiver Page" style="margin-top: 0.1em;">
+    </form>
+
+    <!-- Support Forum -->
+    <form action="https://forums.unraid.net/topic/191678-7-zip-for-unraid/" method="get" target="_blank"
+      style="margin: 0;">
+      <input type="submit" value="❓ Support Forum" style="margin-top: 0.1em;">
+    </form>
+
+    <!-- Generate Diagnostics ZIP -->
+    <form method="post" style="margin: 0;">
+      <input type="submit" name="generate_diagnostics" value="🛠️ Generate Diagnostics" style="margin-top: 0.1em;">
+    </form>
+  </div>
+</div>
+
+<div style="display: flex;">
+  <div style="margin-left: auto; width: 240px;">
+    <?php
+    if (isset($_POST['generate_diagnostics'])) {
+      $diagFolder = '/boot/config/plugins/zip_manager/zip_manager_diagnostics';
+      $diagZip = '/boot/config/plugins/zip_manager/zip_manager_diagnostics.zip';
+      $debugLog = '/boot/config/plugins/zip_manager/logs/zip_manager_diagnostic_debug.log';
+
+      // Cleanup previous
+      @exec("rm -rf " . escapeshellarg($diagFolder));
+      @unlink($diagZip);
+      @unlink($debugLog);
+
+      mkdir($diagFolder, 0755, true);
+
+      // Files to redact + copy
+      $logFiles = [
+        'archiver_debug.log',
+        'extractor_debug.log',
+      ];
+
+      foreach ($logFiles as $filename) {
+        $src = "/boot/config/plugins/zip_manager/logs/$filename";
+        $dest = "$diagFolder/$filename";
+
+        if (!file_exists($src))
+          continue;
+
+        $content = file_get_contents($src);
+
+if ($filename === 'archiver_debug.log') {
+  $excludedPaths = ['/usr/bin/7zzs'];
+  $excludedMessages = [
+    "Trial version             Type 'rar -?' for help",
+    "Evaluation copy. Please register.",
+  ];
+
+  $lines = explode("\n", $content);
+  $redactedLines = [];
+
+  foreach ($lines as $line) {
+    if (in_array(trim($line), $excludedMessages)) {
+      continue;
+    }
+
+    $srcAssigned = false;
+    $destAssigned = false;
+
+    $line = preg_replace('/^- (.+)$/', '- [REDACTED_NAME]', $line);
+    $line = preg_replace('#^(✅ chown succeeded: )(.+?) ->#', '$1[SRC] ->', $line);
+    $line = preg_replace('#^(✅ chmod applied: )(.+?) ->#', '$1[SRC] ->', $line);
+
+    // 🔐 Mask -p'password' or -p"password" or -p123
+    $line = preg_replace("/-p(['\"]?)[^'\"]+\\1/", "-p'[REDACTED]'", $line);
+
+    // 🔒 Mask /mnt/... paths as [SRC] and [DEST]
+    $line = preg_replace_callback(
+      '#[\'"]?(/mnt/[^\'"\s→\n\r]+(?:/[^\'"\s→\n\r]*)*)[\'"]?#',
+      function ($match) use (&$srcAssigned, &$destAssigned, $excludedPaths) {
+        $path = $match[1];
+
+        foreach ($excludedPaths as $excluded) {
+          if (strpos($path, $excluded) === 0) {
+            return $match[0]; // leave unchanged
+          }
+        }
+
+        if (!$srcAssigned) {
+          $srcAssigned = true;
+          return '[SRC]';
+        } elseif (!$destAssigned) {
+          $destAssigned = true;
+          return '[DEST]';
+        } else {
+          return '[REDACTED]';
+        }
+      },
+      $line
+    );
+
+    $redactedLines[] = $line;
+  }
+
+  $content = implode("\n", $redactedLines);
+}
+
+if ($filename === 'extractor_debug.log') {
+  $excludedPaths = ['/usr/bin/7zzs'];
+  $lines = explode("\n", $content);
+  $redactedLines = [];
+
+  foreach ($lines as $line) {
+    $srcAssigned = false;
+    $destAssigned = false;
+
+    $line = preg_replace('/^- (.+)$/', '- [REDACTED_NAME]', $line);
+    $line = preg_replace('#^(✅ chown succeeded: )(.+?) ->#', '$1[SRC] ->', $line);
+    $line = preg_replace('#^(✅ chmod applied: )(.+?) ->#', '$1[SRC] ->', $line);
+
+    // 🔐 Mask -p'password' or -p"password" or -p123
+    $line = preg_replace("/-p(['\"]?)[^'\"]+\\1/", "-p'[REDACTED]'", $line);
+
+    // 🔒 Mask /mnt/... paths as [SRC] and [DEST]
+    $line = preg_replace_callback(
+      '#[\'"]?(/mnt/[^\'"\s→\n\r]+(?:/[^\'"\s→\n\r]*)*)[\'"]?#',
+      function ($match) use (&$srcAssigned, &$destAssigned, $excludedPaths) {
+        $path = $match[1];
+
+        // Skip excluded paths
+        foreach ($excludedPaths as $excluded) {
+          if (strpos($path, $excluded) === 0) {
+            return $match[0]; // leave unchanged
+          }
+        }
+
+        if (!$srcAssigned) {
+          $srcAssigned = true;
+          return '[SRC]';
+        } elseif (!$destAssigned) {
+          $destAssigned = true;
+          return '[DEST]';
+        } else {
+          return '[REDACTED]';
+        }
+      },
+      $line
+    );
+
+    $redactedLines[] = $line;
+  }
+
+  $content = implode("\n", $redactedLines);
+}
+
+        file_put_contents($dest, $content);
+      }
+
+      // Redacted system info (remove hostname)
+      $hostname = php_uname('n');
+      $plgFile = '/boot/config/plugins/zip_manager.plg';
+
+      if (file_exists($plgFile)) {
+        $raw = file_get_contents($plgFile);
+        libxml_use_internal_errors(true);
+        $xml = simplexml_load_string($raw);
+        if ($xml === false) {
+          echo "Failed to parse XML.";
+          foreach (libxml_get_errors() as $error) {
+            echo "<br>", htmlspecialchars($error->message);
+          }
+        } else {
+          $version = (string) $xml['version'] ?? 'unknown';
+        }
+      }
+
+      $sysInfo = "Generated: " . date('Y-m-d H:i:s') . "\n";
+      $sysInfo .= str_replace($hostname, '[REDACTED_HOST]', php_uname()) . "\n";
+      $sysInfo .= "PHP Version: " . phpversion() . "\n";
+      $sysInfo .= "Plugin Version: " . $version . "\n";
+
+      file_put_contents("$diagFolder/system_info.log", $sysInfo);
+
+      // Create ZIP
+      $cmd = "/usr/bin/7zzs a -tzip " . escapeshellarg($diagZip) . " " . escapeshellarg($diagFolder) . " 2>&1";
+      exec($cmd, $zipOutput, $exitCode);
+      file_put_contents($debugLog, implode("\n", $zipOutput));
+
+      // Delete diagnostics folder after zip created
+      exec("rm -rf " . escapeshellarg($diagFolder));
+
+      if (file_exists($diagZip)) {
+        echo "<p style='color:green;'>✅ Diagnostics created: <a href='/boot/config/plugins/zip_manager/" . basename($diagZip) . "' download>Download ZIP</a></p>";
+      } else {
+        echo "<p style='color:red;'>❌ Failed to create diagnostics zip (code $exitCode)</p>";
+      }
+    }
+    ?>
+  </div>
+</div>
+
+<div style="position: relative;">
+  <!-- 🧩 Left: Extraction Form -->
+  <div style="max-width: 640px;">
+    <h2 style="margin: 0; margin-bottom: 8px; color: white;">📦 Extract archive using 7-zip</h2>
+
+    <!-- 📁 Picker Modal -->
+     <div style="position: relative;">
+    <div id="pickerModal" style="display: none;">
+      <div id="breadcrumb"></div>
+      <ul id="fileList"></ul>
+    </div>
+  </div>
+    <br>
+
+    <!-- ⚠️ Overwrite Modal -->
+    <div id="overwriteModal" style="display: none; margin-top: 12px; background: #111111; border: 1px solid orange; font-size: 16px; padding: 12px; color: orange; max-width: 448px;">
+      <div id="overwriteHeader" style="font-weight: bold; margin-bottom: 8px; color: white;">⚠️ The following files may be overwritten:</div>
+      <ul id="overwriteList" style="max-height: 200px; list-style: none; overflow-y: auto; padding-left: 18px;"></ul>
+      <div style="margin-top: 12px;">
+        <button id="overwriteConfirm" style="margin-right: 8px;">✅ Continue</button>
+        <button id="overwriteCancel">❌ Cancel</button>
+      </div>
+    </div>
+  </div>
+  <br>
+
+<div class="field-row">
+  <label for="inputFile">Archive file:</label>
+<input type="text" id="inputFile" class="highlight-input"
+  placeholder="Click to browse" readonly
+  onclick="openPicker('inputFile', false, parentDirectory(document.getElementById('inputFile').value)); validateExtractButton()" />
+    <span id="fileCountDisplay"></span>
+  </div>
+
+    <!-- ➕ Button Container to the Right of Picker Modal -->
+<div id="addPathContainer" style="display:none; position:flex; top:0; left:460px;">
+  <button id="addPathBtn" class="btn-orange">Optional: Add path to destination</button>
+</div>
+
+<div class="field-row" id="passwordRow">
+  <label for="archivePassword">Archive password:</label>
+    <input type="password" id="archivePassword" class="highlight-input"
+      placeholder="Required for encrypted archives" />
+    <span id="togglePasswordWrapper" style="display: none; margin-left: 3px;">
+      <label style="color: orange; font-size: 16px; cursor: pointer;">
+        <input type="checkbox" id="togglePassword" onchange="togglePasswordVisibility()" style="margin-right: 4px;" />
+        Show
+      </label>
+    </span>
+  </div>
+
+    <div class="field-row">
+      <label for="outputDir">Output directory:</label>
+<input type="text" id="outputDir" class="highlight-input"
+  placeholder="Click to browse" readonly
+  onclick="openPicker('outputDir', true, document.getElementById('outputDir').value || '/mnt/'); validateExtractButton()" />
+    </div>
+
+    <button id="extractBtn" onclick="runExtraction()" title="Select both archive file and output directory">🚀 Extract</button>
+    <button id="listContentsBtn" onclick="listArchiveContents()" title="Select archive file">📄 List Contents</button>
+    <button id="clearFormBtn" onclick="clearForm()">🧹 Clear Form</button>
+    <br/><br/>
+    <div id="statusBox"></div>
+
+    <!-- 📋 List Contents Output -->
+    <div id="listOutput" style="display: none; margin-top: 12px; background: #111111; border: 1px solid orange; padding: 12px; max-height: 200px; overflow-y: auto; font-family: monospace; font-size: 16px; color: orange;"></div>
+
+  <!-- 📜 Right: Floating Extraction History -->
+  <div style="position: absolute; top: 6px; right: 300px; width: 825px;">
+    <div onclick="toggleHistory()" style="cursor: pointer; display: flex; align-items: center; color: white; margin-bottom: 8px;">
+      <span id="historyArrow" style="display: inline-block; width: 20px;">▼</span>
+      <h2 style="margin: 0;">📜 Extraction history</h2>
+    </div>
+
+    <div id="historyContainer" style="margin-top: 10px;">
+      <div id="extractLogBox" style="background: #111111; padding: 10px; color: lightgray; max-height: 250px; width: 1090px; overflow-y: auto; font-family: monospace; font-size: 14px; line-height: 1.4em;"></div>
+      <div id="extractLogPlaceholder" style="display: none; color: white; margin-top: 8px;">No extraction history!</div>
+    </div>
+
+    <button id="clearHistoryBtn" onclick="clearExtractHistory()" title="No history to clear" disabled>🧹 Clear History</button>
+
+    <!-- 🧨 Clear History Modal -->
+    <div id="clearHistoryModal" style="display:none; margin-top:12px; background:#111111; border:1px solid orange; padding:12px; color:orange; max-width:448px;">
+      <div style="font-weight:bold; margin-bottom:8px;">⚠️ Clear extraction history?</div>
+      <div>This will remove all previous extraction records. This cannot be undone.</div>
+      <div style="margin-top:12px;">
+        <button id="clearHistoryConfirm" style="margin-right:8px;">✅ Yes, Clear</button>
+        <button id="clearHistoryCancel">❌ Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function validateClearFormButton() {
+  const inputFile = document.getElementById("inputFile").value.trim();
+  const outputDir = document.getElementById("outputDir").value.trim();
+  const clearBtn = document.getElementById("clearFormBtn");
+
+  const isClearable = inputFile || outputDir;
+  clearBtn.disabled = !isClearable;
+  clearBtn.title = isClearable ? "" : "Nothing to clear";
+}
+
+function validateExtractButton() {
+  const inputFile = document.getElementById("inputFile").value.trim();
+  const outputDir = document.getElementById("outputDir").value.trim();
+  const extractBtn = document.getElementById("extractBtn");
+  const listBtn = document.getElementById("listContentsBtn");
+
+  const isExtractValid = inputFile && outputDir;
+  const isListValid = inputFile;
+
+  extractBtn.disabled = !isExtractValid;
+  extractBtn.title = isExtractValid ? "" : "Select both archive file and output directory";
+
+  listBtn.disabled = !isListValid;
+  listBtn.title = isListValid ? "" : "Select archive file";
+  validateClearFormButton();
+}
+
+  function togglePasswordVisibility() {
+  const passwordInput = document.getElementById("archivePassword");
+  const toggle = document.getElementById("togglePassword");
+  passwordInput.type = toggle.checked ? "text" : "password";
+}
+
+function toggleHistory() {
+  const container = document.getElementById("historyContainer");
+  const arrow = document.getElementById("historyArrow");
+
+  const visible = container.style.display !== "none";
+  container.style.display = visible ? "none" : "block";
+  arrow.textContent = visible ? "▶" : "▼";
+}
+function refreshExtractLog() {
+  fetch("/boot/config/plugins/zip_manager/logs/extractor_history.log")
+    .then(res => {
+      if (!res.ok) throw new Error("Log not found");
+      return res.text();
+    })
+    .then(data => {
+      const trimmed = data.trim();
+      const logBox = document.getElementById("extractLogBox");
+
+      if (trimmed) {
+        logBox.style.display = "block";
+        logBox.innerText = trimmed;
+      } else {
+        logBox.style.display = "none";
+        showNoHistoryMessage();
+      }
+    })
+    .catch(() => {
+      document.getElementById("extractLogBox").style.display = "none";
+      showNoHistoryMessage();
+    });
+}
+
+function showNoHistoryMessage() {
+  const placeholder = document.getElementById("extractLogPlaceholder");
+  placeholder.innerText = "No extraction history!";
+  placeholder.style.display = "block";
+}
+
+function clearExtractHistory() {
+  const modal = document.getElementById("clearHistoryModal");
+  const confirmBtn = document.getElementById("clearHistoryConfirm");
+  const cancelBtn = document.getElementById("clearHistoryCancel");
+  const logBox = document.getElementById("extractLogBox");
+
+  modal.style.display = "block";
+
+confirmBtn.onclick = () => {
+  modal.style.display = "none";
+  fetch("/plugins/zip_manager/helpers/clear_extract_history.php", { method: "GET" })
+    .then(res => res.text())
+    .then(() => {
+      const logBox = document.getElementById("extractLogBox");
+      const placeholder = document.getElementById("extractLogPlaceholder");
+      const clearBtn = document.getElementById("clearHistoryBtn");
+
+      logBox.innerText = "";
+      logBox.style.display = "none";
+      placeholder.style.display = "block";
+
+      clearBtn.disabled = true;
+      clearBtn.title = "No history to clear";
+    })
+    .catch(() => {
+      document.getElementById("extractLogBox").innerText = "❌ Failed to clear history.";
+    });
+};
+
+  cancelBtn.onclick = () => {
+    modal.style.display = "none";
+  };
+}
+
+function listArchiveContents() {
+  const input = document.getElementById("inputFile").value;
+  const password = document.getElementById("archivePassword").value;
+  const outputBox = document.getElementById("listOutput");
+
+  document.getElementById("statusBox").innerText = "";
+  outputBox.innerHTML = "";
+  outputBox.style.display = "block";
+
+if (!input) {
+  document.getElementById("statusBox").innerText = "❌ Please select an archive file first.";
+  outputBox.style.display = "none";
+  return;
+}
+
+  outputBox.innerHTML = "<div style='color: orange;'>🔄 Listing archive contents...</div>";
+
+  fetch(`/plugins/zip_manager/helpers/list_archive_contents.php?input=${encodeURIComponent(input)}&password=${encodeURIComponent(password)}`)
+    .then(res => {
+      if (!res.ok) throw new Error("Archive listing failed");
+      return res.text();
+    })
+    .then(output => {
+      const lines = output.trim().split(/\r?\n/);
+
+      let listHTML = `
+        <div style="font-weight: bold; margin-bottom: 8px; color: white;">
+          🗜️ Archive contents:
+        </div>
+        <ul style="padding-left: 18px; list-style: none; margin: 0; color: orange;">
+      `;
+
+      lines.forEach(line => {
+        if (!line) return;
+
+        const segments = line.trim().split('/');
+        const lastSegment = segments[segments.length - 1];
+
+        const isNumericVersionFolder = /^[\d.]+$/.test(lastSegment);
+        const hasExtension = /\.[^\/]+$/.test(lastSegment);
+        const isLikelyFolder = !hasExtension || isNumericVersionFolder;
+
+        const icon = isLikelyFolder ? "📁" : "📄";
+        listHTML += `<li style="margin-bottom: 4px;">${icon} ${line}</li>`;
+      });
+
+      listHTML += "</ul>";
+      outputBox.innerHTML = listHTML;
+    })
+.catch(err => {
+  outputBox.innerHTML = "<div style='color: orange;'>❌ Check or enter your password.</div>";
+  clearPasswordOnly(); // 👈 Only clear password
+
+  const pwdInput = document.getElementById("archivePassword");
+  if (pwdInput) {
+    pwdInput.classList.add("shake");
+    pwdInput.style.boxShadow = "0 0 6px 2px rgba(255, 0, 0, 0.5)";
+    setTimeout(() => {
+      pwdInput.classList.remove("shake");
+      pwdInput.style.boxShadow = "";
+    }, 600);
+  }
+
+  console.error("List error:", err);
+});
+}
+
+function parentDirectory(path) {
+  if (!path) return '/mnt/';
+  // Normalize slashes
+  if (!path.endsWith('/')) {
+    path = path.substring(0, path.lastIndexOf('/') + 1);
+  }
+  if (path === '') path = '/mnt/';
+  return path;
+}
+
+function formatBytes(bytes) {
+  if (bytes === 0) return "0 B";
+  const sizes = ["B", "KB", "MB", "GB", "TB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(1024));
+  const value = bytes / Math.pow(1024, i);
+  return `${value.toFixed(1)} ${sizes[i]}`;
+}
+
+let isModalLocked = false;
+let disallowedBaseFolders = [];
+let clickTimer = null;
+let currentTargetId = null;
+let currentIsDir = null;
+let currentPath = null;
+
+function openPicker(targetId, isDir, path = "/mnt/") {
+  document.getElementById("statusBox").innerText = "";
+  document.getElementById("listOutput").style.display = "none";
+  document.getElementById("listOutput").innerText = "";
+  document.getElementById("addPathContainer").style.display = "none";
+  if (isModalLocked) return;
+
+  currentTargetId = targetId;
+  currentIsDir = isDir;
+  currentPath = path;
+
+  updateBreadcrumb(path);
+
+  fetch(`/plugins/zip_manager/helpers/list_files.php?dir=${encodeURIComponent(path)}`)
+    .then(res => res.json())
+    .then(items => {
+      if (items.error) {
+        document.getElementById("statusBox").innerText = "❌ " + items.error;
+        return;
+      }
+
+      const ul = document.getElementById("fileList");
+      ul.innerHTML = "";
+
+      if (path !== "/mnt/") {
+        const liUp = document.createElement("li");
+        liUp.style.marginLeft = "-3px";
+        liUp.innerHTML = `<span style="color:orange;cursor:pointer;">⬆️ Parent Directory</span>`;
+        liUp.onclick = () => {
+          let parentPath = path.endsWith("/") ? path.slice(0, -1) : path;
+          parentPath = parentPath.substring(0, parentPath.lastIndexOf("/") + 1);
+          openPicker(targetId, isDir, parentPath);
+        };
+        ul.appendChild(liUp);
+      }
+
+      const skipFolders = ['user0/', 'addons/', 'rootshare/'];
+      const filteredItems = items
+        .filter(item => !skipFolders.includes(item.name))
+        .sort((a, b) => {
+          const aFolder = a.name.endsWith("/");
+          const bFolder = b.name.endsWith("/");
+          if (aFolder && !bFolder) return -1;
+          if (!aFolder && bFolder) return 1;
+          return a.name.localeCompare(b.name);
+        });
+
+      if (disallowedBaseFolders.length === 0 && path === "/mnt/") {
+        disallowedBaseFolders = filteredItems
+          .filter(item => item.name.endsWith("/"))
+          .map(item => path + item.name);
+      }
+
+      const allowedExtensions = [
+        '7z','zip','rar','tar','gz','bz2','cbz','cbr','xz','lzma','z','cab','arj','iso','udf',
+        'wim','dmg','vhd','vmdk','msi','deb','rpm','cpio','chm','nsis','exe',
+        'tar.gz','tar.bz2','tar.xz','tar.zst','lzh','lha','ace','zst','img'
+      ];
+
+      let addSelectedBtn = document.createElement("button");
+      addSelectedBtn.textContent = "✅ Add Selected";
+      addSelectedBtn.className = "btn-orange";
+      addSelectedBtn.style.marginTop = "8px";
+      addSelectedBtn.onclick = () => {
+        const checked = ul.querySelector("input[type='checkbox']:checked");
+        if (!checked) {
+          shakeModal();
+          return;
+        }
+        document.getElementById(targetId).value = checked.value;
+
+        if (targetId === "inputFile") {
+          const size = checked.dataset.size;
+          document.getElementById("fileCountDisplay").textContent = size ? `💾 ${size}` : "";
+
+          let parentPath = checked.value.substring(0, checked.value.lastIndexOf("/"));
+          if (!parentPath.endsWith("/")) parentPath += "/";
+          const btnContainer = document.getElementById("addPathContainer");
+          const addBtn = document.getElementById("addPathBtn");
+          btnContainer.style.display = "block";
+          addBtn.onclick = () => {
+            document.getElementById("outputDir").value = parentPath;
+            btnContainer.style.display = "none";
+            validateExtractButton(); // ✅ Update button state
+          };
+
+          fetch(`/plugins/zip_manager/helpers/check_encryption.php?input=${encodeURIComponent(checked.value)}`)
+            .then(res => res.json())
+            .then(data => {
+              document.getElementById("archivePassword").value = "";
+              document.getElementById("passwordRow").style.display = data.encrypted ? "flex" : "none";
+            })
+            .catch(err => console.error("Encryption check failed:", err));
+        }
+
+        validateExtractButton(); // ✅ Update button state
+        closeModal();
+      };
+
+      let clearSelectedBtn = document.createElement("button");
+      clearSelectedBtn.textContent = "❌ Clear Selected";
+      clearSelectedBtn.className = "btn-orange";
+      clearSelectedBtn.style.marginLeft = "auto";
+      clearSelectedBtn.onclick = () => {
+        ul.querySelectorAll("input[type='checkbox']").forEach(cb => cb.checked = false);
+        document.getElementById(targetId).value = "";
+
+        if (targetId === "inputFile") {
+          document.getElementById("fileCountDisplay").textContent = "";
+          document.getElementById("archivePassword").value = "";
+          document.getElementById("passwordRow").style.display = "none";
+          document.getElementById("togglePasswordWrapper").style.display = "none";
+          document.getElementById("addPathContainer").style.display = "none";
+        }
+
+        if (targetId === "outputDir") {
+          document.getElementById("outputDir").value = "";
+        }
+
+        validateExtractButton(); // ✅ Update button state
+        // Do NOT close modal
+      };
+
+      // Render folders
+      filteredItems.forEach(item => {
+        if (item.name.endsWith("/")) {
+          const fullPath = path + item.name;
+          const li = document.createElement("li");
+          const wrapper = document.createElement("span");
+          wrapper.style.gap = "8px";
+
+          const cb = document.createElement("input");
+          cb.type = "checkbox";
+          cb.value = fullPath;
+          cb.style.margin = "0";
+
+          if (isDir && !disallowedBaseFolders.includes(fullPath)) {
+            cb.onclick = () => {
+              ul.querySelectorAll("input[type='checkbox']").forEach(c => { if (c !== cb) c.checked = false; });
+            };
+          } else {
+            cb.disabled = true;
+            cb.style.opacity = "0.5";
+            cb.style.cursor = "not-allowed";
+          }
+
+          wrapper.appendChild(cb);
+
+          const nameSpan = document.createElement("span");
+          nameSpan.textContent = `📁 ${item.name}`;
+          nameSpan.style.color = "orange";
+          nameSpan.style.cursor = "pointer";
+          nameSpan.onclick = () => openPicker(targetId, isDir, fullPath);
+
+          wrapper.appendChild(nameSpan);
+          li.appendChild(wrapper);
+          ul.appendChild(li);
+        }
+      });
+
+      // Render files
+      if (!isDir) {
+        filteredItems.forEach(item => {
+          if (!item.name.endsWith("/")) {
+            const lower = item.name.toLowerCase();
+            const isValid = allowedExtensions.some(ext => lower.endsWith(`.${ext}`));
+            if (!isValid) return;
+
+            const li = document.createElement("li");
+            const wrapper = document.createElement("span");
+            wrapper.style.gap = "8px";
+
+            const cb = document.createElement("input");
+            cb.type = "checkbox";
+            cb.value = path + item.name;
+            cb.dataset.size = formatBytes(item.size);
+            cb.style.margin = "0";
+            cb.onclick = () => {
+              ul.querySelectorAll("input[type='checkbox']").forEach(c => { if (c !== cb) c.checked = false; });
+            };
+            wrapper.appendChild(cb);
+
+            const fileLabel = document.createElement("span");
+            fileLabel.textContent = `📄 ${item.name} (${formatBytes(item.size)})`;
+            fileLabel.style.color = "orange";
+
+            wrapper.appendChild(fileLabel);
+            li.appendChild(wrapper);
+            ul.appendChild(li);
+          }
+        });
+      }
+
+      const buttonWrapper = document.createElement("div");
+      buttonWrapper.style.display = "flex";
+      buttonWrapper.style.marginTop = "8px";
+
+      addSelectedBtn.style.marginRight = "8px";
+      clearSelectedBtn.style.marginLeft = "auto";
+
+      buttonWrapper.appendChild(addSelectedBtn);
+      buttonWrapper.appendChild(clearSelectedBtn);
+
+      ul.appendChild(document.createElement("br"));
+      ul.appendChild(buttonWrapper);
+      document.getElementById("pickerModal").style.display = "block";
+    });
+}
+
+function updateBreadcrumb(path) {
+  const breadcrumbDiv = document.getElementById("breadcrumb");
+  breadcrumbDiv.innerHTML = "";
+
+  if (!path.endsWith("/")) path += "/";
+
+  if (!path.startsWith("/mnt/")) {
+    path = "/mnt/";
+  }
+
+const rootSpan = document.createElement("span");
+rootSpan.innerHTML = '<i class="fas fa-home" style="color:green;"></i>';
+rootSpan.style.cursor = "pointer";
+rootSpan.style.textDecoration = "underline";
+rootSpan.onclick = () => openPicker(currentTargetId, currentIsDir, "/mnt/");
+breadcrumbDiv.appendChild(rootSpan);
+
+  let subPath = path.substring(5); // after /mnt/
+
+  if (subPath.length > 0) {
+    const parts = subPath.split("/").filter(p => p.length > 0);
+
+    parts.forEach((part, idx) => {
+      const sep = document.createElement("span");
+      sep.textContent = "->";
+      sep.className = "separator";
+      breadcrumbDiv.appendChild(sep);
+
+      const cumulativePath = "/mnt/" + parts.slice(0, idx + 1).join("/") + "/";
+
+      const span = document.createElement("span");
+      span.textContent = part;
+      span.style.cursor = "pointer";
+      span.style.textDecoration = "underline";
+      span.onclick = () => openPicker(currentTargetId, currentIsDir, cumulativePath);
+      breadcrumbDiv.appendChild(span);
+    });
+  }
+}
+
+function closeModal() {
+  document.getElementById("pickerModal").style.display = "none";
+}
+
+document.addEventListener("click", (event) => {
+  const modal = document.getElementById("pickerModal");
+  if (modal.style.display === "block" && !modal.contains(event.target)) {
+    closeModal();
+  }
+});
+
+function shakeModal() {
+  const modal = document.getElementById("pickerModal");
+  modal.classList.add("shake");
+  setTimeout(() => modal.classList.remove("shake"), 500);
+}
+
+function clearForm() {
+  // Clear form fields
+  document.getElementById("inputFile").value = "";
+  document.getElementById("archivePassword").value = "";
+  document.getElementById("outputDir").value = "";
+
+  // Hide password input
+  document.getElementById("passwordRow").style.display = "none";
+  document.getElementById("togglePasswordWrapper").style.display = "none";
+
+  // Clear messages
+  document.getElementById("statusBox").innerText = "";
+  document.getElementById("listOutput").innerText = "";
+  document.getElementById("listOutput").style.display = "none";
+
+  // Hide modals
+  document.getElementById("pickerModal").style.display = "none";
+  document.getElementById("overwriteModal").style.display = "none";
+
+  // ✅ Re-enable extract button
+  const extractButton = document.querySelector("button[onclick='runExtraction()']");
+  if (extractButton) extractButton.disabled = false;
+
+  window.location.href = window.location.href;
+}
+
+function clearAllFields() {
+  document.getElementById("inputFile").value = "";
+  document.getElementById("outputDir").value = "";
+  document.getElementById("archivePassword").value = "";
+  document.getElementById("passwordRow").style.display = "none";
+  document.getElementById("togglePasswordWrapper").style.display = "none";
+  document.getElementById("fileCountDisplay").textContent = "";
+  validateExtractButton();
+}
+
+function clearPasswordOnly() {
+  document.getElementById("archivePassword").value = "";
+  document.getElementById("togglePasswordWrapper").style.display = "none";
+}
+
+function runExtraction() {
+  const password = document.getElementById("archivePassword").value || "";
+  const input = document.getElementById("inputFile").value;
+  const output = document.getElementById("outputDir").value;
+
+  const statusBox = document.getElementById("statusBox");
+  const extractButton = document.querySelector("button[onclick='runExtraction()']");
+  const modal = document.getElementById("overwriteModal");
+  const list = document.getElementById("overwriteList");
+  const confirmBtn = document.getElementById("overwriteConfirm");
+  const cancelBtn = document.getElementById("overwriteCancel");
+
+  document.getElementById("listOutput").style.display = "none";
+  document.getElementById("listOutput").innerText = "";
+  statusBox.innerText = "";
+
+  if (!input || !output) {
+    statusBox.innerText = "❌ Select both archive file and output directory.";
+    return;
+  }
+
+  statusBox.innerText = "⏳ Checking for overwrite conflicts...";
+  extractButton.disabled = true;
+
+  const checkEndpoint = `/plugins/zip_manager/helpers/check_extract_overwrites.php?input=${encodeURIComponent(input)}&output=${encodeURIComponent(output)}&password=${encodeURIComponent(password)}`;
+  const extractEndpoint = `/plugins/zip_manager/helpers/extract.php?input=${encodeURIComponent(input)}&output=${encodeURIComponent(output)}&password=${encodeURIComponent(password)}`;
+
+  fetch(checkEndpoint)
+    .then(res => res.json())
+    .then(data => {
+      if (data.conflicts && data.conflicts.length > 0) {
+        statusBox.innerText = "";
+        list.innerHTML = "";
+
+        data.conflicts.forEach(name => {
+          const segments = name.trim().split('/');
+          const lastSegment = segments[segments.length - 1];
+          const isNumericVersionFolder = /^[\d.]+$/.test(lastSegment);
+          const hasExtension = /\.[^\/]+$/.test(lastSegment);
+          const isLikelyFolder = !hasExtension || isNumericVersionFolder;
+          const icon = isLikelyFolder ? "📁" : "📄";
+
+          const li = document.createElement("li");
+          li.textContent = `${icon} ${name}`;
+          li.style.marginBottom = "4px";
+          li.style.color = "orange";
+          li.style.fontFamily = "monospace";
+          li.style.fontSize = "16px";
+          list.appendChild(li);
+        });
+
+        modal.style.display = "block";
+
+        confirmBtn.onclick = () => {
+          modal.style.display = "none";
+          statusBox.innerText = "⏳ Extraction in progress...";
+          fetch(extractEndpoint)
+            .then(res => res.text())
+            .then(msg => {
+              statusBox.innerText = msg;
+              extractButton.disabled = false;
+
+              const isSuccess = msg.includes("✅");
+              if (isSuccess) {
+                clearAllFields();
+                loadExtractHistory();
+              } else {
+                clearPasswordOnly();
+              }
+            })
+            .catch(err => {
+              console.error("Extraction error:", err);
+              statusBox.innerText = "❌ Extraction failed.";
+              extractButton.disabled = false;
+              clearPasswordOnly();
+            });
+        };
+
+        cancelBtn.onclick = () => {
+          modal.style.display = "none";
+          statusBox.innerText = "❌ Extraction canceled.";
+          extractButton.disabled = false;
+        };
+
+      } else {
+        statusBox.innerText = "⏳ Extraction in progress...";
+        fetch(extractEndpoint)
+          .then(res => res.text())
+          .then(msg => {
+            statusBox.innerText = msg;
+            extractButton.disabled = false;
+
+            const isSuccess = msg.includes("✅");
+            if (isSuccess) {
+              clearAllFields();
+              loadExtractHistory();
+            } else {
+              clearPasswordOnly();
+            }
+          })
+          .catch(err => {
+            console.error("Extraction error:", err);
+            statusBox.innerText = "❌ Extraction failed.";
+            extractButton.disabled = false;
+            clearPasswordOnly();
+          });
+      }
+    })
+    .catch(err => {
+      console.error("Conflict check error:", err);
+      statusBox.innerText = "❌ Could not check for overwrite conflicts.";
+      extractButton.disabled = false;
+      clearPasswordOnly();
+    });
+}
+
+// Auto-pulse #statusBox when content updates
+const statusBox = document.getElementById("statusBox");
+const observer = new MutationObserver(() => {
+  statusBox.classList.remove("animate-pulse");
+  void statusBox.offsetWidth;
+  statusBox.classList.add("animate-pulse");
+});
+observer.observe(statusBox, { childList: true, characterData: true, subtree: true });
+
+function loadExtractHistory() {
+  fetch("/plugins/zip_manager/helpers/get_extract_history.php")
+    .then(res => res.text())
+    .then(data => {
+      const logBox = document.getElementById("extractLogBox");
+      const clearBtn = document.getElementById("clearHistoryBtn");
+      const placeholder = document.getElementById("extractLogPlaceholder");
+      const trimmed = data.trim();
+
+      const hasRealHistory = trimmed && !/^No extraction history!?$/i.test(trimmed);
+
+      if (hasRealHistory) {
+        logBox.innerText = trimmed;
+        logBox.style.display = "block";
+        placeholder.style.display = "none"; // ✅ Hide placeholder
+        clearBtn.disabled = false;
+        clearBtn.title = "Clear extraction history";
+      } else {
+        logBox.innerText = "";
+        logBox.style.display = "none";
+        showNoHistoryMessage();
+        clearBtn.disabled = true;
+        clearBtn.title = "No history to clear";
+      }
+    })
+    .catch(() => {
+      const logBox = document.getElementById("extractLogBox");
+      const clearBtn = document.getElementById("clearHistoryBtn");
+      const placeholder = document.getElementById("extractLogPlaceholder");
+
+      logBox.innerText = "❌ Failed to load history.";
+      logBox.style.display = "block";
+      placeholder.style.display = "none"; // ✅ Hide placeholder
+      clearBtn.disabled = true;
+      clearBtn.title = "No history to clear";
+    });
+}
+
+// Call it once on page load
+loadExtractHistory();
+
+document.addEventListener("DOMContentLoaded", () => {
+  validateExtractButton();
+  loadExtractHistory();
+  validateClearFormButton();
+  const passwordInput = document.getElementById("archivePassword");
+  const toggleWrapper = document.getElementById("togglePasswordWrapper");
+
+if ( typeof caPluginUpdateCheck === "function" ) {
+        caPluginUpdateCheck("zip_manager.plg",{name:"Zip Manager"});
+    }
+
+  if (passwordInput && toggleWrapper) {
+    passwordInput.addEventListener("input", () => {
+      toggleWrapper.style.display = passwordInput.value ? "inline" : "none";
+    });
+  }
+});
+</script>
