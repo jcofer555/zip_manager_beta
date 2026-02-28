@@ -4,7 +4,7 @@
 <PLUGIN 
   name="zip_manager_beta"
   author="jcofer555"
-  version="2026.02.28.01"
+  version="2026.02.28.02"
   launch="Settings/Extractor"
   pluginURL="https://raw.githubusercontent.com/jcofer555/zip_manager_beta/main/plugin/zip_manager_beta.plg"
   support="https://forums.unraid.net/topic/191678-zip-manager-for-unraid/"
@@ -16,7 +16,7 @@
 <CHANGES>
 <![CDATA[
 
-### 2026.02.28.01
+### 2026.02.28.02
 
 - 1
 
@@ -26,13 +26,13 @@ For older releases, see https://github.com/jcofer555/zip_manager_beta/releases
 </CHANGES>
 
 <FILE Name="/boot/config/plugins/zip_manager_beta/7z2409-linux-x64.tar.xz">
-<URL>https://github.com/jcofer555/zip_manager_beta/raw/refs/tags/2026.02.28.01/packages/7z2409-linux-x64.tar.xz</URL>
+<URL>https://github.com/jcofer555/zip_manager_beta/raw/refs/tags/2026.02.28.02/packages/7z2409-linux-x64.tar.xz</URL>
 <SHA256>914c7e20ad5ef8e4d3cf08620ff8894b28fe11b7eb99809d6930870fbe48a281</SHA256>
 </FILE>
 
-<FILE Name="/boot/config/plugins/zip_manager_beta/unraid-zip-manager-2026.02.28.01-noarch-1.txz">
-<URL>https://github.com/jcofer555/zip_manager_beta/releases/download/2026.02.28.01/unraid-zip-manager-2026.02.28.01-noarch-1.txz</URL>
-<SHA256>8bdef4d09892121c7f1d69a0f20a818ae15b8ff209db1ed0809fde1c9cd1a0c5</SHA256>
+<FILE Name="/boot/config/plugins/zip_manager_beta/unraid-zip-manager-2026.02.28.02-noarch-1.txz">
+<URL>https://github.com/jcofer555/zip_manager_beta/releases/download/2026.02.28.02/unraid-zip-manager-2026.02.28.02-noarch-1.txz</URL>
+<SHA256>166eec4320960e118ec889b05b1ba191dbdd6090af9c24c60a0a08c129359ec2</SHA256>
 </FILE>
 
 <!--
@@ -41,7 +41,7 @@ The 'install' script.
 <FILE Run="/bin/bash">
 <INLINE>
 <![CDATA[
-upgradepkg --install-new /boot/config/plugins/zip_manager_beta/unraid-zip-manager-2026.02.28.01-noarch-1.txz
+upgradepkg --install-new /boot/config/plugins/zip_manager_beta/unraid-zip-manager-2026.02.28.02-noarch-1.txz
 
 killall 7zzs >/dev/null 2>&1
 killall rar >/dev/null 2>&1
@@ -49,13 +49,13 @@ killall unrar >/dev/null 2>&1
 tar xvf /boot/config/plugins/zip_manager_beta/7z2409-linux-x64.tar.xz -C /usr/bin/ 7zzs
 
 # cleanup old versions
-rm -f $(ls /boot/config/plugins/zip_manager_beta/unraid-zip-manager-*.txz 2>/dev/null | grep -v '2026.02.28.01')
+rm -f $(ls /boot/config/plugins/zip_manager_beta/unraid-zip-manager-*.txz 2>/dev/null | grep -v '2026.02.28.02')
 rm -f $(ls /boot/config/plugins/zip_manager_beta/*.tar.xz 2>/dev/null | grep -v '7z2409-linux-x64.tar.xz')
 
 echo ""
 echo "----------------------------------------------------"
 echo " zip_manager_beta has been installed."
-echo " Version: 2026.02.28.01"
+echo " Version: 2026.02.28.02"
 echo "----------------------------------------------------"
 echo ""
 ]]>
